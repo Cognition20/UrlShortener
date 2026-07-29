@@ -3,7 +3,7 @@ using UrlShortener.Application.Common.Interfaces.UrlActions;
 
 namespace UrlShortener.Infrastructure.UrlActions;
 
-public class ShortUrlBuilder(IHttpContextAccessor httpContextAccessor) : IShortUrlBuilder
+public class ShortUrlBuilder( IHttpContextAccessor httpContextAccessor) : IShortUrlBuilder
 {
     public string BuildShortUrl(string code)
     {

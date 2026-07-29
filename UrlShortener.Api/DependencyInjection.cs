@@ -1,4 +1,5 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.OpenApi.Models;
 using UrlShortener.Api.Common.Mapping;
 
 namespace UrlShortener.Api;
@@ -7,6 +8,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddPresentation(this IServiceCollection services)
     {
+        services.AddHsts();
+        services.AddHttpsRedirection();
         services.AddMapping();
         services.AddControllers();
         services.AddOpenApi();
@@ -50,6 +53,29 @@ public static class DependencyInjection
             });
         });
 
+        return services;
+    }
+    
+    private static IServiceCollection AddHttpsRedirection(this IServiceCollection services)
+    {
+        services.AddHttpsRedirection(options =>
+        {
+            options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+            options.HttpsPort = 7237;
+        });
+        
+        return services;
+    }
+    
+    private static IServiceCollection AddHsts(this IServiceCollection services)
+    {
+        services.Configure<HstsOptions>(options =>
+        {
+            options.Preload = true;
+            options.MaxAge = TimeSpan.FromDays(365);
+            options.IncludeSubDomains = true;
+        });
+        
         return services;
     }
 }

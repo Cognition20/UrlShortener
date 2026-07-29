@@ -1,4 +1,5 @@
 using UrlShortener.Api;
+using UrlShortener.Api.Middlewares.SecurityHeaders;
 using UrlShortener.Application;
 using UrlShortener.Infrastructure;
 
@@ -11,6 +12,8 @@ builder.Services
 
 var app = builder.Build();
 
+app.MapGet("/health", () => Results.Ok());
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -20,9 +23,22 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = "swagger"; // optional, serve Swagger at root /
     });
 }
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseExceptionHandler("/error");
-//app.UseHttpsRedirection();
+app.UseSecurityHeadersMiddleware(
+    new SecurityHeadersBuilder()
+        .AddDefaultSecurePolicy());
+app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
+
+public partial class Program { }
