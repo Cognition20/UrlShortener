@@ -37,6 +37,8 @@ app.UseExceptionHandler("/error");
 app.UseSecurityHeadersMiddleware(
     new SecurityHeadersBuilder()
         .AddDefaultSecurePolicy());
+
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

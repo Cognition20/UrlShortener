@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.HttpsPolicy;
+﻿using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.OpenApi.Models;
 using UrlShortener.Api.Common.Mapping;
 
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.AddOpenApi();
         return services;
     }
+
     private static IServiceCollection AddOpenApi(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
@@ -55,23 +57,35 @@ public static class DependencyInjection
 
         return services;
     }
-    
-    private static IServiceCollection AddHttpsRedirection(this IServiceCollection services, IConfiguration configuration)
+
+    private static IServiceCollection AddForwardedHeader(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                                       ForwardedHeaders.XForwardedProto;
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddHttpsRedirection(this IServiceCollection services,
+        IConfiguration configuration)
     {
         services.AddHttpsRedirection(options =>
         {
             options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
-            
+
             var httpsPort = configuration.GetValue<int?>("HttpsPort");
             if (httpsPort.HasValue)
             {
                 options.HttpsPort = httpsPort.Value;
             }
         });
-        
+
         return services;
     }
-    
+
     private static IServiceCollection AddHsts(this IServiceCollection services)
     {
         services.Configure<HstsOptions>(options =>
@@ -80,7 +94,7 @@ public static class DependencyInjection
             options.MaxAge = TimeSpan.FromDays(365);
             options.IncludeSubDomains = true;
         });
-        
+
         return services;
     }
 }
