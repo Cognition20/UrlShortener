@@ -6,10 +6,10 @@ namespace UrlShortener.Api;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddPresentation(this IServiceCollection services)
+    public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHsts();
-        services.AddHttpsRedirection();
+        services.AddHttpsRedirection(configuration);
         services.AddMapping();
         services.AddControllers();
         services.AddOpenApi();
@@ -56,12 +56,17 @@ public static class DependencyInjection
         return services;
     }
     
-    private static IServiceCollection AddHttpsRedirection(this IServiceCollection services)
+    private static IServiceCollection AddHttpsRedirection(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpsRedirection(options =>
         {
             options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
-            options.HttpsPort = 7237;
+            
+            var httpsPort = configuration.GetValue<int?>("HttpsPort");
+            if (httpsPort.HasValue)
+            {
+                options.HttpsPort = httpsPort.Value;
+            }
         });
         
         return services;
