@@ -1,17 +1,24 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.OpenApi.Models;
 using UrlShortener.Api.Common.Mapping;
 
 namespace UrlShortener.Api;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddPresentation(this IServiceCollection services)
+    public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddHsts();
+        services.AddForwardedHeader(configuration);
+        services.AddHttpsRedirection(configuration);
         services.AddMapping();
         services.AddControllers();
         services.AddOpenApi();
+        
         return services;
     }
+
     private static IServiceCollection AddOpenApi(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
@@ -48,6 +55,46 @@ public static class DependencyInjection
                     Array.Empty<string>()
                 }
             });
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddForwardedHeader(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                                       ForwardedHeaders.XForwardedProto;
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddHttpsRedirection(this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddHttpsRedirection(options =>
+        {
+            options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+
+            var httpsPort = configuration.GetValue<int?>("HttpsPort");
+            if (httpsPort.HasValue)
+            {
+                options.HttpsPort = httpsPort.Value;
+            }
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddHsts(this IServiceCollection services)
+    {
+        services.Configure<HstsOptions>(options =>
+        {
+            options.Preload = true;
+            options.MaxAge = TimeSpan.FromDays(365);
+            options.IncludeSubDomains = true;
         });
 
         return services;
