@@ -10,10 +10,12 @@ public static class DependencyInjection
     public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHsts();
+        services.AddForwardedHeader(configuration);
         services.AddHttpsRedirection(configuration);
         services.AddMapping();
         services.AddControllers();
         services.AddOpenApi();
+        
         return services;
     }
 
